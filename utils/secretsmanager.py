@@ -27,7 +27,8 @@ class SecretsManager:
         self.openai_configs = []
 
         # Default settings JSON filename
-        self.settings_filename = "secrets.json"
+        self.settings_filename = "secrets.dat"
+        self.settings_json_filename = "secrets.json"
 
         # Load settings from JSON file at startup
         self.load_settings(self.settings_filename)
@@ -58,16 +59,24 @@ class SecretsManager:
         # Save settings to file after updating
         self.to_json(self.settings_filename)
 
-    def to_json(self, file_path):
+    # Declare a function for saving as json, it may be encryped by default
+    def to_json(self, file_path, encryped: bool= True):
         # Serialize the SecretsManager instance to JSON
         data = {
             "deepgram_api_key": self.deepgram_api_key,
             "openai_configs": [vars(config) for config in self.openai_configs],
         }
+        json_data = json.dumps(data)
+
+        encrypted_data = self.crypto_manager.encrypt_message(json_data)
+        
         # Write to JSON file
-        encrypted_data = self.crypto_manager.encrypt_message(json.dumps(data))
         with open(file_path, "w") as file:
-            file.write(encrypted_data)
+            if encryped:
+                file.write(encrypted_data)
+            else:
+                file.write(json_data)
+        
 
     def load_settings(self, file_path):
         # Decrypt the JSON file and load settings
